@@ -1,0 +1,10 @@
+1782301410467	geckodriver	INFO	Listening on 127.0.0.1:52453
+1782301413592	mozrunner::runner	INFO	Running command: "C:\\Users\\Skynet\\.cache\\selenium\\firefox\\win64\\152.0.2\\firefox.exe" "--marionette" "--remote-debuggi ... " "--remote-allow-hosts" "localhost" "-no-remote" "-profile" "C:\\Users\\Skynet\\AppData\\Local\\Temp\\rust_mozprofileq9e1PS"
+Dynamically enable window occlusion 0
+1782301414267	Marionette	INFO	Marionette enabled
+1782301414486	Marionette	INFO	Listening on port 61162
+Read port: 61162
+WebDriver BiDi listening on ws://127.0.0.1:52454
+1782301414627	RemoteAgent	WARN	TLS certificate errors will be ignored for this session
+[GFX1-]: CompositorBridgeChild receives IPC close with reason=AbnormalShutdown
+Exiting due to channel error.

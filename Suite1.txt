@@ -1,0 +1,97 @@
+*** Settings ***
+Library           Selenium2Library
+Library           OperatingSystem
+Library           DatabaseLibrary
+Variables         Layer_Application/OR/Objects.py
+Library           String
+Variables         TestData/TestData.py
+Library           ExcelLibrary
+Library           Collections
+Variables         TestData/lib_Config.py
+Variables         TestData/lib_Constants.py
+Library           Layer_Platform/DateTimeFunctions.py
+Library           Layer_Platform/PlatformFunctions.py
+Library           Layer_Platform/StringFunctions.py
+Library           Layer_Platform/FileFunctions.py
+Library           Layer_Platform/Util_Excel.py
+Library           Layer_Platform/ExcelDrivenExecution.py
+Library           Layer_Platform/OTAOperations.py
+Library           XML
+Library           JiraRobot
+Library           Layer_Platform/EMail.py
+
+*** Variables ***
+&{dTestData}
+
+*** Test Cases ***
+TC_Google_App1
+    Launch Browser    google.com
+
+Load_Test_Data
+    [Tags]    robot
+    Comment    Fetch testdata from mySql
+    Set Suite Variable    ${FetchInputDataFrom}    mysql
+    LoadTestData    TC0001
+    Log    ${dTestData["AppURL"]}
+    Comment    Fetch testdata from excel
+    Set Suite Variable    ${FetchInputDataFrom}    excel
+    LoadTestData    TC0001
+    Log    ${dTestData["AppURL"]}
+
+*** Keywords ***
+Launch Browser
+    Open Browser    https://www.google.co.in/?gws_rd=ssl
+    sleep    5s
+    Maximize Browser Window
+    Input Text    xpath=.//input[@name='q']    Tieto
+    Click Button    xpath=.//input[contains(@value,'Google Search')]
+    Page Should Contain Link    xpath=.//a[contains(.,'Tieto provides IT services to accelerate your business')]
+    Close Browser
+
+LoadTestData
+    [Arguments]    ${sTestCaseNo}
+    ${FetchInputDataFrom}    Convert To Lowercase    ${FetchInputDataFrom}
+    Run Keyword If    '${FetchInputDataFrom}'=='excel'    LoadTestDataExcel    ${sTestCaseNo}
+    Run Keyword If    '${FetchInputDataFrom}'=='mysql'    LoadTestDataMySQL    ${sTestCaseNo}
+
+LoadTestDataExcel
+    [Arguments]    ${sTestCaseNo}
+    Set Suite Variable    ${sFileName}    ${TestDataFileName}
+    Set Suite Variable    ${sSheetName}    ${TestDataSheetName}
+    Set Suite Variable    ${bDataFound}    ${TC_False}
+    log    ${sFileName}
+    Open Excel    ${sFileName}
+    #Get the total rows in the Sheet
+    ${iTotalRows}    ExcelLibrary.Get Row Count    ${sSheetName}
+    : FOR    ${iRowNo}    IN RANGE    1    ${iTotalRows}
+    \    ${TC_Num}    Read Cell Data By Coordinates    ${sSheetName}    0    ${iRowNo}
+    \    log    ${sTestCaseNo}
+    \    Run Keyword If    '${sTestCaseNo}'=='${TC_Num}'    Set Suite Variable    ${bDataFound}    ${TC_True}
+    \    ${sSearchedData}    Run Keyword If    '${sTestCaseNo}'=='${TC_Num}'    Get Row Values    ${sSheetName}    ${iRowNo}
+    \    Comment    ${arrTestData}    Run Keyword If    '${sTestCaseNo}'=='${TC_Num}'    ${sSearchedData}
+    \    Comment    ${arrTestData}    Run Keyword If    '${sTestCaseNo}'=='${TC_Num}'    Convert To String    ${arrTestData}
+    \    Comment    Set Suite Variable    ${arrTestData}    ${sSearchedData}
+    \    ${arrTestData}    Run Keyword If    '${sTestCaseNo}'=='${TC_Num}'    Convert To String    ${sSearchedData}
+    \    Comment    ${arrTestData}    Convert To String    ${arrTestData}
+    \    ${sKey}    Run Keyword If    '${sTestCaseNo}'=='${TC_Num}'    GetSubstringByDelimiter    ${arrTestData}    (
+    \    ...    2
+    \    ${sKey}    Run Keyword If    '${sTestCaseNo}'=='${TC_Num}'    GetSubstringByDelimiter    ${sKey}    '
+    \    ...    3
+    \    ${sValue}    Run Keyword If    '${sTestCaseNo}'=='${TC_Num}'    GetSubstringByDelimiter    ${arrTestData}    (
+    \    ...    3
+    \    ${sValue}    Run Keyword If    '${sTestCaseNo}'=='${TC_Num}'    GetSubstringByDelimiter    ${sValue}    '
+    \    ...    3
+    \    Run Keyword If    '${sTestCaseNo}'=='${TC_Num}'    Set To Dictionary    ${dTestData}    ${sKey}    ${sValue}
+    \    Exit For Loop If    '${sTestCaseNo}'<>'${TC_Num}' and '${bDataFound}'== '${TC_True}'
+    Set Suite Variable    &{dTestData}
+
+LoadTestDataMySQL
+    [Arguments]    ${sTestCaseNo}
+    Connect To Database Using Custom Params    pymysql    database='${MySQLDB}', user='${MySQLUser}', password='${MySQLPassword}', host='${MySQLHost}', port=${MySQLPort}
+    ${sqlQuery}    catenate    SELECT TDesc,TDescVal FROM    ${MySQLTableName}    WHERE TCID=    "${sTestCaseNo}"
+    ${ResultSet}    Query    ${sqlQuery}
+    Log Many    ${ResultSet}
+    ${TC_COUNTER}    Get Length    ${ResultSet}
+    : FOR    ${TC_LOOPCOUNER}    IN RANGE    0    ${TC_COUNTER}
+    \    Set To Dictionary    ${dTestData}    ${ResultSet[${TC_LOOPCOUNER}][0]}    ${ResultSet[${TC_LOOPCOUNER}][1]}
+    [Return]    ${dTestData}

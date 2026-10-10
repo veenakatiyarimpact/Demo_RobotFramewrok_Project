@@ -1,0 +1,41 @@
+
+*** Settings ***
+Library    RPA.Excel.Files
+Library    Collections
+
+*** Variables ***
+&{dTestData}
+
+*** Test Cases ***
+Load Test Data From Excel (Refactored)
+    ${data}=    Load Test Data From Excel    test.xlsx    Sheet1    TC0001
+    Log    ${data["Address"]}
+
+*** Keywords ***
+Load Test Data From Excel
+    [Arguments]    ${file}    ${sheet}    ${testcase}
+    Open Workbook    ${file}
+    ${rows}=    Read Worksheet As Table    name=${sheet}
+
+    ${result}=    Create Dictionary
+
+    FOR    ${row}    IN    @{rows}
+        IF    '${row["TCID"]}' == '${testcase}'
+            Set To Dictionary    ${result}    ${row["TDesc"]}    ${row["TDescVal"]}
+        END
+    END
+
+    Close Workbook
+    RETURN    ${result}
+
+
+Write Data To Excel
+    [Arguments]    ${file}    ${sheet}    ${data}
+    Open Workbook    ${file}
+
+    ${exists}=    Run Keyword And Return Status    Worksheet Should Exist    ${sheet}
+    Run Keyword If    not ${exists}    Create Worksheet    ${sheet}
+
+    Write Worksheet As Table    ${data}    name=${sheet}
+    Save Workbook
+    Close Workbook

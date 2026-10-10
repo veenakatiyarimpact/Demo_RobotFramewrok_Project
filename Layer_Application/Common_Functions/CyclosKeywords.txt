@@ -1,0 +1,618 @@
+*** Settings ***
+Library           Selenium2Library
+Library           OperatingSystem
+Library           DatabaseLibrary
+Variables         ../../TestData/lib_Constants.py
+Library           ../../Layer_Platform/DateTimeFunctions.py
+Library           ../../Layer_Platform/PlatformFunctions.py
+Library           ../../Layer_Platform/StringFunctions.py
+Library           ../../Layer_Platform/FileFunctions.py
+Library           String
+
+*** Keywords ***
+LogintoCyclos
+    [Arguments]    ${argCyclosURL}    ${argUsername}    ${argPassword}
+    Open Browser    ${argCyclosURL}    chrome
+    Input Text    cyclosUsername    ${argUsername}
+    Input Password    cyclosPassword    ${argPassword}
+    Click Button    Submit
+
+LoginIntoCyclosApplication
+    [Arguments]    ${argURL}    ${argUsername}    ${argPassword}
+    Run    TASKKILL /F /IM firefox.exe
+    Log    ${argURL}
+    Open Browser    ${argURL}    ff
+    Go To    ${argURL}
+    Maximize Browser Window
+    Input Text    cyclosUsername    ${argUsername}
+    Input Password    cyclosPassword    ${argPassword}
+    Click Button    Submit
+    Capture Page Screenshot    LoginIntoCyclosApplication.png
+
+CreateNewCurrency
+    [Arguments]    ${newCurrencyName}    ${newCurrencySymbol}    ${newCurrencyPattern}    ${newCurrencyDescTxt}
+    ${TC_NUMBER}    Get Small Random No
+    ${newCurrencyName}    Catenate    ${newCurrencyName}_    ${TC_NUMBER}
+    ${newCurrencyName}    Remove Space In String    ${newCurrencyName}
+    Click Element    ${Obj_Lnk_Accounts}
+    Sleep    2s
+    Click Element    ${Obj_Lnk_ManageCurrencies}
+    Sleep    2s
+    Click Button    ${Obj_Btn_NewCurrency}
+    Sleep    2s
+    Input Text    ${Obj_Txt_CurrencyName}    ${newCurrencyName}
+    Input Text    ${Obj_Txt_CurrencySymbol}    ${newCurrencySymbol}
+    Input Text    ${Obj_Txt_CurrencyPattern}    ${newCurrencyPattern}
+    Input Text    ${Obj_Txt_DescriptionTxt}    ${newCurrencyDescTxt}
+    Click Button    ${Obj_Btn_SaveCurrency}
+    Sleep    2s
+    Alert Should Be Present
+    Sleep    2s
+    Capture Page Screenshot    CreateNewCurrency.jpg
+    Set Suite Variable    ${dTestData["AccCurrency"]}    ${newCurrencyName}
+
+UpdateCurrency
+    [Arguments]    ${OldCurrencyName}    ${newCurrencyName}    ${newCurrencySymbol}    ${newCurrencyPattern}    ${newCurrencyDescTxt}
+    ${TC_NUMBER}    Get Small Random No
+    ${newCurrencyName}    Catenate    ${newCurrencyName}_    ${TC_NUMBER}
+    ${newCurrencyName}    Remove Space In String    ${newCurrencyName}
+    SearchCurrency    ${OldCurrencyName}
+    Input Text    ${Obj_Txt_CurrencyName}    ${newCurrencyName}
+    Input Text    ${Obj_Txt_CurrencySymbol}    ${newCurrencySymbol}
+    Input Text    ${Obj_Txt_CurrencyPattern}    ${newCurrencyPattern}
+    Input Text    ${Obj_Txt_DescriptionTxt}    ${newCurrencyDescTxt}
+    Click Button    ${Obj_Btn_SaveCurrency}
+    Sleep    2s
+    Alert Should Be Present
+    Sleep    2s
+    Capture Page Screenshot    UpdateCurrency.jpg
+    Set Suite Variable    ${dTestData["AccCurrency"]}    ${newCurrencyName}
+
+GetTableRowCount
+    [Arguments]    ${rowLocator}
+    Run Keyword And Return    Get Matching Xpath Count    ${rowLocator}
+
+FindTextInTable
+    [Arguments]    ${rowLocator}    ${cellText}    ${column}
+    Log    ${rowLocator}
+    ${rowCount}    GetTableRowCount    ${rowLocator}
+    Set Suite Variable    ${rowLocator}    xpath=${rowLocator}
+    : FOR    ${rowIndex}    IN RANGE    2    ${rowCount}+1
+    \    ${curText}    Get Text    ${rowLocator}[${rowIndex}]/td[${column}]
+    \    Exit For Loop If    '${curText}'=='${cellText}'
+    Set Suite Variable    ${rowNumber}    ${rowIndex}
+    Capture Page Screenshot    FindTextInTable
+    [Teardown]
+    [Return]    ${rowNumber}
+
+SearchCurrency
+    [Arguments]    ${CurrencyName}
+    Click Element    ${Obj_Lnk_Bookkeeping}
+    Sleep    2s
+    Click Element    ${Obj_Lnk_Accounts}
+    Sleep    2s
+    Click Element    ${Obj_Lnk_ManageCurrencies}
+    Sleep    2s
+    ${rowNo}    FindTextInTable    ${Obj_Tbl_CurrenciesRows}    ${CurrencyName}    1
+    Click Element    ${Obj_Img_ModifyCurrency}${rowNo}]/td[3]/img[1]
+    Sleep    2s
+    Capture Page Screenshot    SearchCurrency.jpg
+    Click Button    ${Obj_Btn_ChangeCurrency}
+    Sleep    2s
+
+ManageAccounts
+    [Arguments]    ${accType}    ${accName}    ${accDesc}    ${accCurrency}    ${newAccountName}    ${newaccDesc}
+    Comment    Manage Account
+    Comment    Create Account
+    CreateNewAccount    ${accType}    ${accName}    ${accDesc}    ${accCurrency}
+    Comment    Update Account
+    UpdateAccount    ${accName}    ${newAccountName}    ${newaccDesc}
+    Comment    System Accounts
+    SearchSystemAccount    ${dTestData["systemAccountName"]}
+    System Payment
+    SystemPayment
+    SearchSystemAccount    ${dTestData["systemAccountName"]}
+    Comment    Member Payment
+    MemberPayment
+
+SearchAccount
+    [Arguments]    ${AccountName}
+    Click Element    ${Obj_Lnk_Bookkeeping}
+    Sleep    2s
+    Click Element    ${Obj_Lnk_Accounts}
+    Sleep    2s
+    Click Element    ${Obj_Lnk_ManageAccounts}
+    Sleep    2s
+    ${rowNo}    FindTextInTable    ${Obj_Tbl_CurrenciesRows}    ${AccountName}    1
+    Click Element    ${Obj_Img_ModifyAccount}${rowNo}]/td[4]/img[1]
+    Sleep    2s
+    Capture Page Screenshot    SearchAccount.jpg
+    Click Button    ${Obj_Btn_ChangeAccount}
+    Sleep    2s
+
+UpdateAccount
+    [Arguments]    ${OldAccountName}    ${newAccountName}    ${newAccountDescTxt}
+    ${TC_NUMBER}    Get Small Random No
+    ${newAccountName}    Catenate    ${newAccountName}_    ${TC_NUMBER}
+    ${newAccountName}    Remove Space In String    ${newAccountName}
+    SearchAccount    ${OldAccountName}
+    Input Text    ${Obj_Txt_AccountName}    ${newAccountName}
+    Input Text    ${Obj_Txt_AccDesc}    ${newAccountDescTxt}
+    Click Button    ${Obj_Btn_SaveCurrency}
+    Sleep    2s
+    Alert Should Be Present
+    Sleep    2s
+    Capture Page Screenshot    UpdateAccount.jpg
+
+UserCreationFullMember
+    Comment    Wait Until Element Is Enabled    ${Obj_Lnk_UsersAndGroups}
+    Comment    Click Link    ${Obj_Lnk_UsersAndGroups}
+    Sleep    10
+    Wait Until Element Is Enabled    ${Obj_Lnk_ManageMembers}
+    Click Link    ${Obj_Lnk_ManageMembers}
+    Wait Until Element Is Enabled    ${Obj_List_CreateMember}
+    Select From List By Value    ${Obj_List_CreateMember}    ${TypeofUser}
+    Wait Until Element Is Enabled    ${Obj_Txt_FullName}
+    ${randomNumber}    Get Random No
+    ${newFullName}    Catenate    ${FullName}    _    ${randomNumber}
+    Input Text    ${Obj_Txt_FullName}    ${newFullName}
+    Wait Until Element Is Enabled    ${Obj_Txt_LoginName}
+    ${newLoginName}    Catenate    ${LoginName}    _    ${randomNumber}
+    Log    ${newLoginName}
+    Input Text    ${Obj_Txt_LoginName}    ${newLoginName}
+    ${newEmailName}    Catenate    ${Email}    _    ${randomNumber}
+    Wait Until Element Is Enabled    ${Obj_Txt_Email}
+    Input Text    ${Obj_Txt_Email}    ${newEmailName}
+    Wait Until Element Is Enabled    ${OBJ_Txt_Birthday}
+    Input Text    ${OBJ_Txt_Birthday}    ${Birthdate}
+    Select Radio Button    ${OBJ_Sel_Gender}    ${Gender}
+    Input Text    ${OBJ_Txt_Address}    ${Address}
+    Input Text    ${OBJ_Txt_PostalCode}    ${PostalCode}
+    Input Text    ${OBJ_Txt_City}    ${City}
+    Input Text    ${OBJ_Txt_MobilePhone}    ${MobilePhone}
+    Click Button    ${OBJ_Btn_Submit}
+    Alert Should Be Present
+
+SearchSystemAccount
+    [Arguments]    ${AccountName}
+    Click Element    ${Obj_Lnk_Bookkeeping}
+    Sleep    2s
+    Click Element    ${Obj_Lnk_Accounts}
+    Sleep    2s
+    Click Element    ${Obj_Lnk_SystemAccounts}
+    Sleep    2s
+    ${rowNo}    FindTextInTable    ${Obj_Tbl_CurrenciesRows}    ${AccountName}    1
+    Click Element    ${Obj_Img_ModifyAccount}${rowNo}]/td[3]/img[1]
+    Sleep    2s
+    Click Button    ${Obj_Btn_Search}
+    Sleep    2s
+    ${accBalance}    Get Text    ${Obj_Txt_AccountBalance}
+    Log    System Account Balance is ${accBalance}
+    Capture Page Screenshot    SearchSystemAccount.jpg
+
+CreateNewAccount
+    [Arguments]    ${accType}    ${accName}    ${accDesc}    ${accCurrency}
+    Click Element    ${Obj_Lnk_Bookkeeping}
+    Sleep    2s
+    Click Element    ${Obj_Lnk_Accounts}
+    Sleep    2s
+    Click Element    ${Obj_Lnk_ManageAccounts}
+    Sleep    2s
+    Click Button    ${Obj_Btn_NewAccount}
+    Sleep    2s
+    Select From List By Label    ${Obj_Cmb_AccountType}    ${accType}
+    ${TC_NUMBER}    Get Random No
+    ${accName}    Catenate    ${accName}_    ${TC_NUMBER}
+    ${accName}    Remove Space In String    ${accName}
+    Input Text    ${Obj_Txt_AccountName}    ${accName}
+    Input Text    ${Obj_Txt_AccDesc}    ${accDesc}
+    Select From List By Label    ${Obj_Cmb_AccountCurrency}    ${accCurrency}
+    Click Button    ${Obj_Btn_SaveCurrency}
+    Sleep    2s
+    Alert Should Be Present
+    Sleep    2s
+    Capture Page Screenshot    CreateNewAccount.jpg
+    Set Suite Variable    ${dTestData["memberAccountType"]}    ${accName}
+
+SystemPayment
+    Click Element    ${Obj_Lnk_Bookkeeping}
+    Sleep    2s
+    Click Element    ${Obj_Lnk_Accounts}
+    Sleep    2s
+    Click Element    ${Obj_Lnk_SystemPayment}
+    Sleep    2s
+    Input Text    ${OBJ_Txt_Amount}    5000
+    Select From List By Label    ${OBJ_List_TransactionType}    ${dTestData["sysTransactionType"]}
+    Input Text    ${OBJ_Txt_Description}    Desc
+    Click Button    ${OBJ_Btn_ConfirmAndSubmit}
+    Sleep    2s
+    Element Should Contain    ${Obj_Tbl_Currencies}    ${dTestData["sysTransactionType"]}
+    Element Should Contain    ${Obj_Tbl_Currencies}    System
+    Element Should Contain    ${Obj_Tbl_Currencies}    Desc
+    Click Button    ${OBJ_Btn_ConfirmAndSubmit}
+    Sleep    2s
+    Element Should Contain    ${Obj_Tbl_Currencies}    payment has been performed
+    Capture Page Screenshot    SystemPayment.jpg
+
+MemberPayment
+    Click Element    ${Obj_Lnk_Bookkeeping}
+    Sleep    2s
+    Click Element    ${Obj_Lnk_Accounts}
+    Sleep    2s
+    Click Element    ${Obj_Lnk_MemberPayment}
+    Sleep    2s
+    Input Text    ${Obj_Txt_RecipientLogin}    ${dTestData["USERNAME"]}
+    Input Text    ${Obj_Txt_RecipientName}    ${dTestData["MemberName"]}
+    Input Text    ${OBJ_Txt_Amount}    100
+    Input Text    ${OBJ_Txt_Description}    Payment to member
+    Click Button    ${OBJ_Btn_PaymentSubmit}
+    Sleep    2s
+    ${strAlert}    Get Alert Message
+    Log    ${strAlert}
+    Capture Page Screenshot    MemberPayment.jpg
+
+CreateExternalAccounts
+    Click Element    ${Obj_Lnk_Bookkeeping}
+    Sleep    2s
+    Click Element    ${Obj_Lnk_ManageExternalAccounts}
+    Sleep    2s
+    Click Element    ${Obj_Btn_NewAccount}
+    Sleep    2s
+    ${TC_NUMBER}    GetRandomNo
+    ${dTestData["extrnlAccName"]}    Catenate    ${dTestData["extrnlAccName"]}_    ${TC_NUMBER}
+    ${dTestData["extrnlAccName"]}    Remove Space In String    ${dTestData["extrnlAccName"]}
+    Input Text    ${Obj_Txt_ExternalAccountName}    ${dTestData["extrnlAccName"]}
+    Input Text    ${Obj_Txt_DescriptionTxt}    ${dTestData["AccDesc"]}
+    Select From List By Label    ${Obj_Cmb_SystemAccountType}    ${dTestData["systemAccountType"]}
+    Select From List By Label    ${Obj_Cmb_MemberAccountType}    ${dTestData["memberAccountType"]}
+    Click Button    ${OBJ_Btn_ConfirmAndSubmit}
+    Sleep    2s
+    ${strAlert}    Get Alert Message
+    Log    ${strAlert}
+    Capture Page Screenshot    CreateExternalAccounts.jpg
+    Set Suite Variable    ${dTestData["extrnlAccName"]}
+
+UpdateExternalAccounts
+    Click Button    ${Obj_Btn_ChangeExternalAccount}
+    Sleep    2s
+    ${TC_NUMBER}    GetRandomNo
+    ${dTestData["newextrnlAccName"]}    Catenate    ${dTestData["newextrnlAccName"]}_    ${TC_NUMBER}
+    ${dTestData["newextrnlAccName"]}    Remove Space In String    ${dTestData["newextrnlAccName"]}
+    Input Text    ${Obj_Txt_ExternalAccountName}    ${dTestData["newextrnlAccName"]}
+    Input Text    ${Obj_Txt_DescriptionTxt}    ${dTestData["newAccDesc"]}
+    Select From List By Label    ${Obj_Cmb_SystemAccountType}    ${dTestData["newsystemAccountType"]}
+    Select From List By Label    ${Obj_Cmb_MemberAccountType}    ${dTestData["newmemberAccountType"]}
+    Click Button    ${OBJ_Btn_ConfirmAndSubmit}
+    Sleep    2s
+    ${strAlert}    Get Alert Message
+    Log    ${strAlert}
+    Should Be Equal    ${strAlert}    The external account was modified
+    Capture Page Screenshot    UpdateExternalAccounts.jpg
+    Set Suite Variable    ${dTestData["extrnlAccName"]}    ${dTestData["newextrnlAccName"]}
+
+SearchExternalAccount
+    [Arguments]    ${AccountName}
+    Log    ${AccountName}
+    Click Element    ${Obj_Lnk_Accounts}
+    Sleep    2s
+    Click Element    ${Obj_Lnk_Bookkeeping}
+    Sleep    2s
+    Click Element    ${Obj_Lnk_ManageExternalAccounts}
+    Sleep    2s
+    ${rowNo}    FindTextInTable    ${Obj_Tbl_CurrenciesRows}    ${AccountName}    1
+    Click Element    ${Obj_Img_ModifyAccount}${rowNo}]/td[2]/img[1]
+    Sleep    2s
+    Capture Page Screenshot    SearchExternalAccount.jpg
+
+InsertPaymentType
+    ${TC_NUMBER}    Get Random No
+    ${dTestData["ExternalPaymentTypeName"]}    Catenate    ${dTestData["ExternalPaymentTypeName"]}_    ${TC_NUMBER}
+    ${dTestData["ExternalPaymentTypeName"]}    Remove Space In String    ${dTestData["ExternalPaymentTypeName"]}
+    Click Button    ${Obj_Btn_NewPaymentType}
+    Input Text    ${Obj_Txt_externalTransferName}    ${dTestData["ExternalPaymentTypeName"]}
+    Input Text    ${Obj_Txt_AccDesc}    ${dTestData["ExternalPaymentTypeDesc"]}
+    Input Text    ${Obj_Txt_externalTransferCode}    ${dTestData["ExternalPaymentTypeName"]}
+    Select From List By Label    ${Obj_Txt_externalTransferAction}    ${dTestData["ExternalPaymentTypeAction"]}
+    Sleep    2s
+    Click Button    ${OBJ_Btn_ConfirmAndSubmit}
+    Sleep    2s
+    ${strAlert}    Get Alert Message
+    Log    ${strAlert}
+    Should Be Equal    ${strAlert}    The payment type was inserted
+    Capture Page Screenshot    InsertPaymentType.jpg
+    Set Suite Variable    ${dTestData["ExternalPaymentTypeName"]}
+
+UpdatePaymentType
+    ${TC_NUMBER}    Get Random No
+    ${dTestData["newExternalPaymentTypeName"]}    Catenate    ${dTestData["newExternalPaymentTypeName"]}_    ${TC_NUMBER}
+    ${dTestData["newExternalPaymentTypeName"]}    Remove Space In String    ${dTestData["newExternalPaymentTypeName"]}
+    Click Button    ${OBJ_Btn_Change}
+    Input Text    ${Obj_Txt_externalTransferName}    ${dTestData["newExternalPaymentTypeName"]}
+    Input Text    ${Obj_Txt_AccDesc}    ${dTestData["newExternalPaymentTypeDesc"]}
+    Input Text    ${Obj_Txt_externalTransferCode}    ${dTestData["newExternalPaymentTypeName"]}
+    Select From List By Label    ${Obj_Txt_externalTransferAction}    ${dTestData["newExternalPaymentTypeAction"]}
+    Sleep    2s
+    Click Button    ${OBJ_Btn_ConfirmAndSubmit}
+    Sleep    2s
+    ${strAlert}    Get Alert Message
+    Log    ${strAlert}
+    Should Be Equal    ${strAlert}    The payment type was modified
+    Capture Page Screenshot    InsertPaymentType.jpg
+    Set Suite Variable    ${dTestData["ExternalPaymentTypeName"]}    ${dTestData["newExternalPaymentTypeName"]}
+    Capture Page Screenshot    UpdatePaymentType.jpg
+
+SearchPaymentType
+    [Arguments]    ${PaymentTypeName}
+    Log    ${PaymentTypeName}
+    ${rowNo}    FindTextInTable    ${Obj_Tbl_PaymentTypeRows}    ${PaymentTypeName}    1
+    Click Element    ${Obj_Img_ModifyPayment}${rowNo}]/td[3]/img[1]
+    Sleep    2s
+    Capture Page Screenshot    SearchPaymentType.jpg
+
+SearchExternalAccountsOverview
+    [Arguments]    ${AccountName}
+    Log    ${AccountName}
+    Click Element    ${Obj_Lnk_Accounts}
+    Sleep    2s
+    Click Element    ${Obj_Lnk_Bookkeeping}
+    Sleep    2s
+    Click Element    ${Obj_Lnk_ExternalAccounts}
+    Sleep    2s
+    ${rowNo}    FindTextInTable    ${Obj_Tbl_CurrenciesRows}    ${AccountName}    1
+    Click Element    ${Obj_Img_ModifyCurrency}${rowNo}]/td[3]/img[2]
+    Sleep    2s
+    Capture Page Screenshot    SearchExternalAccountsOverview.jpg
+
+ExternalAccountPayment
+    Click Button    ${Obj_Btn_ExternalPayment}
+    Sleep    2s
+    Select From List By Label    ${Obj_Cmb_ExternalTransferType}    ${dTestData["ExternalPaymentTypeName"]}
+    ${sDate}    Add Days    1
+    Input Text    ${Obj_Txt_ExternalPaymentDate}    ${sDate}
+    Input Text    ${Obj_Txt_ExternalAmount}    ${dTestData["ExternalPaymentAmount"]}
+    Input Text    ${Obj_Txt_RecipientLogin}    ${dTestData["USERNAME"]}
+    Input Text    ${Obj_Txt_RecipientName}    ${dTestData["MemberName"]}
+    Input Text    ${OBJ_Txt_DescriptionTxt}    New external transfer
+    Input Text    ${Obj_Txt_ExternalPaymentDate}    ${sDate}
+    Sleep    5s
+    Click Button    ${OBJ_Btn_ConfirmAndSubmit}
+    Sleep    2s
+    ${strAlert}    Get Alert Message
+    Log    ${strAlert}
+    Should Be Equal    ${strAlert}    Member is required
+    Capture Page Screenshot    ExternalAccountPayment.jpg
+
+AddCardType
+    Comment    Manage card types
+    Click Element    ${Obj_Lnk_AccessDevices}
+    Sleep    2s
+    Click Element    ${Obj_Lnk_ManageCardTypes}
+    Sleep    2s
+    Click Button    ${Obj_Btn_NewCardType}
+    Sleep    2s
+    ${TC_NUMBER}    GetRandomNo
+    ${dTestData["cardTypeName"]}    Catenate    ${dTestData["cardTypeName"]}_    ${TC_NUMBER}
+    ${dTestData["cardTypeName"]}    Remove Space In String    ${dTestData["cardTypeName"]}
+    Input Text    ${Obj_Txt_CardTypeName}    ${dTestData["cardTypeName"]}
+    Input Text    ${Obj_Txt_CardTypeFormat}    ${dTestData["cardFormatNo"]}
+    Input Text    ${Obj_Txt_CardTypeExpiry}    ${dTestData["cardExpYear"]}
+    Click Button    ${Obj_Btn_CardTypeSave}
+    ${strAlert}    Get Alert Message
+    Should be equal    ${strAlert}    The card type was inserted
+    Capture Page Screenshot    AddCardType.jpg
+    Set Suite Variable    ${dTestData["cardTypeName"]}
+
+SearchCardType
+    [Arguments]    ${CardTypeName}
+    Click Element    ${Obj_Lnk_Accounts}
+    Sleep    2s
+    Click Element    ${Obj_Lnk_AccessDevices}
+    Sleep    2s
+    Click Element    ${Obj_Lnk_ManageCardTypes}
+    Sleep    2s
+    ${rowNo}    FindTextInTable    ${Obj_Tbl_CurrenciesRows}    ${CardTypeName}    1
+    Click Element    ${Obj_Img_ModifyCurrency}${rowNo}]/td[2]/img[1]
+    Sleep    2s
+    Capture Page Screenshot    SearchCardType.jpg
+    Set Suite Variable    ${rowNo}
+
+UpdateCardType
+    Comment    Update card types
+    Click Button    ${OBJ_Btn_Change}
+    Sleep    2s
+    ${TC_NUMBER}    GetRandomNo
+    ${dTestData["newcardTypeName"]}    Catenate    ${dTestData["newcardTypeName"]}_    ${TC_NUMBER}
+    ${dTestData["newcardTypeName"]}    Remove Space In String    ${dTestData["newcardTypeName"]}
+    Input Text    ${Obj_Txt_CardTypeName}    ${dTestData["newcardTypeName"]}
+    Input Text    ${Obj_Txt_CardTypeFormat}    ${dTestData["cardFormatNo"]}
+    Input Text    ${Obj_Txt_CardTypeExpiry}    ${dTestData["cardExpYear"]}
+    Click Button    ${Obj_Btn_CardTypeSave}
+    ${strAlert}    Get Alert Message
+    Should be equal    ${strAlert}    The card type was modified
+    Capture Page Screenshot    AddCardType.jpg
+    Set Suite Variable    ${dTestData["cardTypeName"]}    ${dTestData["newcardTypeName"]}
+
+DeleteCardType
+    Click Button    ${OBj_Btn_Back}
+    Sleep    2s
+    Click Element    ${Obj_Img_ModifyCurrency}${rowNo}]/td[2]/img[2]
+    Sleep    2s
+    ${strAlert}    Get Alert Message
+    Should Be Equal    ${strAlert}    Remove this card type?
+    Sleep    2s
+    ${strAlert}    Get Alert Message
+    Should Be Equal    ${strAlert}    The card type was removed
+    Capture Page Screenshot    DeleteCardType.jpg
+
+ModifyProfile
+    Sleep    3s
+    Click Link    ${Obj_Lnk_Personal}
+    Sleep    2s
+    Click Link    ${Obj_Lnk_Profile}
+    Sleep    2s
+    Click Button    ${Obj_Btn_ChangeProfile}
+    Sleep    2s
+    Input Text    ${Obj_Txt_FullName}    ${dTestData["newFullName"]}
+    Input Text    ${Obj_Txt_AdminEmail}    ${dTestData["newEmail"]}
+    Click Button    ${Obj_Btn_SaveProfile}
+    Sleep    2s
+    ${strAlert}    Get Alert Message
+    Should Be Equal    ${strAlert}    Profile modified
+    Capture Page Screenshot    ModifyProfile.jpg
+    Should Be Equal    ${strAlert}    Profile modified
+    Element Should Contain    ${Obj_Txt_FullName}    ${dTestData["newFullName"]}
+    Element Should Contain    ${Obj_Txt_AdminEmail}    ${dTestData["newEmail"]}
+    Capture Page Screenshot    ModifyProfile.jpg
+
+Priti_Keywords
+
+UserCreation
+    [Arguments]    ${TypeofUser}    ${FullName}    ${LoginName}    ${Email}    ${Birthdate}    ${Gender}
+    ...    ${Address}    ${PostalCode}    ${City}    ${MobilePhone}
+    Wait Until Element Is Enabled    ${Obj_Lnk_UsersAndGroups}
+    Click Element    ${Obj_Lnk_UsersAndGroups}
+    Wait Until Element Is Enabled    ${Obj_Lnk_ManageMembers}
+    Click Element    ${Obj_Lnk_ManageMembers}
+    Wait Until Element Is Enabled    ${Obj_List_CreateMember}
+    Select From List By Value    ${Obj_List_CreateMember}    ${TypeofUser}
+    Sleep    3
+    Wait Until Element Is Enabled    ${Obj_Txt_FullName}
+    ${randomNumber}    Get Random No
+    ${newFullName}    Catenate    SEPARATOR=    ${FullName}    _    ${randomNumber}
+    Input Text    ${Obj_Txt_FullName}    ${newFullName}
+    Wait Until Element Is Enabled    ${Obj_Txt_LoginName}
+    ${newLoginName}    Catenate    SEPARATOR=    ${LoginName}    _    ${randomNumber}
+    Log    ${newLoginName}
+    Input Text    ${Obj_Txt_LoginName}    ${newLoginName}
+    Wait Until Element Is Enabled    ${Obj_Txt_Email}
+    Input Text    ${Obj_Txt_Email}    ${Email}
+    Wait Until Element Is Enabled    ${OBJ_Txt_Birthday}
+    Input Text    ${OBJ_Txt_Birthday}    ${Birthdate}
+    Select Radio Button    ${OBJ_Sel_Gender}    ${Gender}
+    Input Text    ${OBJ_Txt_Address}    ${Address}
+    Input Text    ${OBJ_Txt_PostalCode}    ${PostalCode}
+    Input Text    ${OBJ_Txt_City}    ${City}
+    ${newMobilePhone}    Catenate    SEPARATOR=    ${MobilePhone}    ${randomNumber}
+    Input Text    ${OBJ_Txt_MobilePhone}    ${newMobilePhone}
+    Click Button    ${OBJ_Btn_OpenProfileSubmit}
+    Alert Should Be Present
+
+PaymentSystemToMember
+    [Arguments]    ${Amount}    ${TransactionType}    ${Description}
+    Wait Until Element Is Enabled    ${OBJ_Btn_PaymentSystemToMemberSubmit}
+    Click Button    ${OBJ_Btn_PaymentSystemToMemberSubmit}
+    Wait Until Element Is Enabled    ${OBJ_Txt_Amount}
+    Input Text    ${OBJ_Txt_Amount}    ${Amount}
+    Select From List By Value    ${OBJ_List_TransactionType}    ${TransactionType}
+    Input Text    ${OBJ_Txt_Description}    ${Description}
+    Click Button    ${OBJ_Btn_PaymentSubmit}
+    Sleep    3
+    Click Button    ${OBJ_Btn_ConfirmAndSubmit}
+    Sleep    2
+    Page Should Contain    The payment has been performed
+
+ManageNotification
+    Wait Until Element Is Enabled    ${OBJ_Btn_ManageNotification}
+    Click Button    ${OBJ_Btn_ManageNotification}
+    Sleep    5
+    Select Checkbox    ${OBJ_Chk_MemberMessages}
+    Select Checkbox    ${OBJ_Chk_AdminMessages}
+    Click Button    ${OBJ_Btn_Submit}
+    Alert Should Be Present
+    Click Button    ${OBj_Btn_Back}
+
+ManageAdvertisements
+    Sleep    5
+    Click Button    ${OBJ_Btn_ManageAdvertisements}
+    Sleep    5
+    Click Button    ${OBJ_Btn_CreateNewAdvertise}
+    Wait Until Element Is Enabled    ${OBJ_Txt_Title}
+    Input Text    ${OBJ_Txt_Title}    ${Title}
+    Select From List By Value    ${OBJ_List_Category}    ${Category}
+    Input Text    ${OBJ_Txt_Price}    ${Price}
+    Select Checkbox    ${OBj_Chk_Expirable}
+    Click Button    ${OBJ_Btn_AdvertisementSubmit}
+
+CreateAdministrator
+    [Arguments]    ${TypeofAdmin}    ${FullName}    ${LoginName}    ${Email}    ${Password}
+    Click Element    ${Obj_Lnk_Bookkeeping}
+    Sleep    2s
+    Wait Until Element Is Enabled    ${Obj_Lnk_UsersAndGroups}
+    Click Element    ${Obj_Lnk_UsersAndGroups}
+    Wait Until Element Is Enabled    ${OBJ_Lnk_ManageAdmins}
+    Click Element    ${OBJ_Lnk_ManageAdmins}
+    Sleep    3
+    Wait Until Element Is Enabled    ${OBJ_List_CreateAdministrator}
+    Select From List By Value    ${OBJ_List_CreateAdministrator}    ${TypeofAdmin}
+    Sleep    3
+    Wait Until Element Is Enabled    ${OBJ_Txt_AccountAdminFullName}
+    ${randomNumber}    Get Random No
+    ${newFullName}    Catenate    SEPARATOR=    ${FullName}    _    ${randomNumber}
+    Input Text    ${OBJ_Txt_AccountAdminFullName}    ${newFullName}
+    Wait Until Element Is Enabled    ${OBJ_Txt_AccountAdminLoginName}
+    ${newLoginName}    Catenate    SEPARATOR=    ${LoginName}    _    ${randomNumber}
+    Log    ${newLoginName}
+    Input Text    ${OBJ_Txt_AccountAdminLoginName}    ${newLoginName}
+    Wait Until Element Is Enabled    ${OBJ_Txt_AccountAdminEmail}
+    Input Text    ${OBJ_Txt_AccountAdminEmail}    ${Email}
+    Input Text    ${OBJ_Txt_AccountAdminPassword}    ${Password}
+    Input Text    ${OBJ_Txt_AccountAdminConfirmPwd}    ${Password}
+    Click Button    ${OBJ_Btn_AccountAdminSaveAndOpen}
+
+LogoutFromCyclos
+    Click Element    ${Obj_Lnk_Logout}
+    Alert Should Be Present
+    Close Browser
+
+EditMemberGroupSettings
+    [Arguments]    ${AppURLModify}    ${DescriptionModify}    ${MaxProfileImages}    ${PasswordPolicy}    ${AdPublication}
+    Wait Until Element Is Enabled    ${OBJ_Btn_ChangeMemberGroupSettings}
+    Click Button    ${OBJ_Btn_ChangeMemberGroupSettings}
+    Wait Until Element Is Enabled    ${OBJ_Txt_AppURLModify}
+    Input Text    ${OBJ_Txt_AppURLModify}    ${AppURLModify}
+    Input Text    ${OBJ_TxtArea_DescModify}    ${DescriptionModify}
+    Input Text    ${OBJ_Txt_MaxProfileImages}    ${MaxProfileImages}
+    Select From List By Value    ${OBJ_List_PasswordPolicy}    ${PasswordPolicy}
+    Select From List By Value    ${OBJ_List_AdPublication}    ${AdPublication}
+    Click Button    ${OBJ_Btn_SaveGroupSettings}
+    Sleep    2
+    Alert Should Be Present
+    Sleep    2
+
+CreateNewPermissionGroup
+    [Arguments]    ${TypeofGroup}    ${Name}    ${AppURL}    ${Description}
+    Wait Until Element Is Enabled    ${Obj_Lnk_UsersAndGroups}
+    Click Element    ${Obj_Lnk_UsersAndGroups}
+    Wait Until Element Is Enabled    ${OBJ_Lnk_PermissionGroups}
+    Click Element    ${OBJ_Lnk_PermissionGroups}
+    Wait Until Element Is Enabled    ${OBJ_Btn_NewGroupSubmit}
+    Click Button    ${OBJ_Btn_NewGroupSubmit}
+    Wait Until Element Is Enabled    ${OBJ_List_Type}
+    Select From List By Value    ${OBJ_List_Type}    ${TypeofGroup}
+    ${randomnumber}    Get Random No
+    ${newName}    Catenate    SEPARATOR=    ${Name}    _    ${randomnumber}
+    Input Text    ${OBJ_Txt_Name}    ${newName}
+    Input Text    ${OBJ_Txt_AppURL}    ${AppURL}
+    Input Text    ${OBJ_TxtArea_Description}    ${Description}
+    Click Button    ${OBJ_Btn_SavePermissionGroup}
+    Alert Should Be Present
+
+EditPermissionGroup
+    Wait Until Element Is Enabled    ${OBJ_Btn_EditPermission}
+    Click Button    ${OBJ_Btn_EditPermission}
+    Wait Until Element Is Enabled    ${OBJ_Btn_ChangePermission}
+    Click Button    ${OBJ_Btn_ChangePermission}
+    Wait Until Element Is Enabled    ${OBJ_Chk_AuthorizedPayments}
+    Select Checkbox    ${OBJ_Chk_AuthorizedPayments}
+    Select Checkbox    ${OBJ_Chk_ScheduledPayments}
+    Select Checkbox    ${OBJ_Chk_ViewCards}
+    Select Checkbox    ${OBJ_Chk_ViewInvoices}
+    Comment    Click Element    ${OBJ_List_MemberProfile}
+    Comment    Select Checkbox    ${OBJ_Chk_DisabledBroker}
+    Comment    Click Element    ${OBJ_List_Messages}
+    Comment    Select Checkbox    ${Obj_Chk_administrator}
+    Select Checkbox    ${OBJ_Chk_ManageNotifications}
+    Select Checkbox    ${OBJ_Chk_ManageAdInterests}
+    Select Checkbox    ${OBJ_Chk_ManageReceiptPrinters}
+    Click Button    ${OBJ_Btn_SubmitPermissionChanges}
+    Alert Should Be Present

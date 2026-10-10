@@ -1,0 +1,13 @@
+set wsc = CreateObject("WScript.Shell")
+
+WScript.Sleep (2000)
+'wsc.SendKeys ("{Home}+{End}{Delete}")
+WScript.Sleep (1000)
+wsc.SendKeys ("{Delete}")
+WScript.Sleep (500)
+wsc.SendKeys ("{Delete}")
+WScript.Sleep (500)
+wsc.SendKeys ("{BACKSPACE}")
+WScript.Sleep (500)
+wsc.SendKeys ("{BACKSPACE}")
+WScript.Sleep (500)

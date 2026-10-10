@@ -1,0 +1,102 @@
+
+*** Settings ***
+Documentation     Enterprise Level Robot Framework
+Library           SeleniumLibrary
+Library           RPA.Excel.Files
+Library           Collections
+Library           OperatingSystem
+
+Suite Setup       Setup Suite
+Suite Teardown    Teardown Suite
+Test Setup        Setup Test
+Test Teardown     Teardown Test
+
+*** Variables ***
+${EXCEL_FILE}     testdata.xlsx
+${SHEET_NAME}     TestData
+${BROWSER}        chrome
+
+*** Test Cases ***
+Run All Test Scenarios
+    ${testcases}=    Get Unique TestCases    ${EXCEL_FILE}    ${SHEET_NAME}
+    FOR    ${tc}    IN    @{testcases}
+        Run Test Scenario    ${tc}
+    END
+
+*** Keywords ***
+# ================= FRAMEWORK CORE =================
+
+Setup Suite
+    Log    Initializing Test Suite
+
+Teardown Suite
+    Log    Cleaning up Test Suite
+
+Setup Test
+    Log    Starting Test: ${TEST NAME}
+
+Teardown Test
+    Log    Ending Test: ${TEST NAME}
+    Close All Browsers
+
+Run Test Scenario
+    [Arguments]    ${tcid}
+    Log    Executing TestCase: ${tcid}
+    ${dTestData}=    Load Test Data    ${EXCEL_FILE}    ${SHEET_NAME}    ${tcid}
+    Execute Business Flow    ${tcid}    ${dTestData}
+
+# ================= DATA LAYER =================
+
+Get Unique TestCases
+    [Arguments]    ${file}    ${sheet}
+    Open Workbook    ${file}
+    ${rows}=    Read Worksheet As Table    name=${sheet}
+    ${ids}=    Create List
+    FOR    ${row}    IN    @{rows}
+        Append To List    ${ids}    ${row["TCID"]}
+    END
+    ${unique}=    Remove Duplicates    ${ids}
+    Close Workbook
+    RETURN    ${unique}
+
+Load Test Data
+    [Arguments]    ${file}    ${sheet}    ${tcid}
+    Open Workbook    ${file}
+    ${rows}=    Read Worksheet As Table    name=${sheet}
+    ${data}=    Create Dictionary
+    FOR    ${row}    IN    @{rows}
+        IF    '${row["TCID"]}' == '${tcid}'
+            Set To Dictionary    ${data}    ${row["TDesc"]}    ${row["TDescVal"]}
+        END
+    END
+    Close Workbook
+    RETURN    ${data}
+
+# ================= BUSINESS LAYER =================
+
+Execute Business Flow
+    [Arguments]    ${tcid}    ${data}
+    Run Keyword If    '${tcid}' == 'TC001'    Login Flow    ${data}
+    Run Keyword If    '${tcid}' == 'TC002'    Payment Flow    ${data}
+
+Login Flow
+    [Arguments]    ${data}
+    Open Browser    ${data["APPURL"]}    ${BROWSER}
+    Input Text    id=username    ${data["USERNAME"]}
+    Input Text    id=password    ${data["PASSWORD"]}
+    Click Button    id=login
+
+Payment Flow
+    [Arguments]    ${data}
+    Log    Performing payment for ${data["USERNAME"]}
+
+# ================= UTILITIES =================
+
+Write Results
+    [Arguments]    ${results}
+    Open Workbook    results.xlsx
+    ${exists}=    Run Keyword And Return Status    Worksheet Should Exist    Results
+    Run Keyword If    not ${exists}    Create Worksheet    Results
+    Write Worksheet As Table    ${results}    name=Results
+    Save Workbook
+    Close Workbook

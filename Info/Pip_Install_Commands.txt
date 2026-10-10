@@ -1,0 +1,17 @@
+## pip install xlrd
+
+## For excel ops
+## pip install pyexcel
+## pip install openpyexcel
+## pip install robotframework-excellibrary
+pip install XlsxWriter
+## pip install xlutils
+
+pip install robotframework-excellibrary
+
+## for parallel execution
+pip install -U robotframework-pabot  
+
+
+## for SVN integration
+pip install robotframework-ride-tortoisesvn

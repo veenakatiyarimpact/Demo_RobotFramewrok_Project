@@ -1,0 +1,103 @@
+*** Settings ***
+Library           SeleniumLibrary
+Library           OperatingSystem
+Library           DatabaseLibrary
+Library           Collections
+Variables         TestData/lib_Constants.py
+Library           XML
+Library           String
+Suite Teardown    Open Report  
+
+
+*** Variables ***
+&{dTestData}
+${TC_DATA}        ${EMPTY}
+
+*** Test Cases ***
+SampleTestCase
+    should be equal    Pune    Pune
+    should be equal 
+
+BrowserTest
+    ${options}=    Evaluate    sys.modules['selenium.webdriver'].ChromeOptions()    sys,selenium.webdriver
+    Call Method    ${options}    add_experimental_option    detach    ${True}
+    open browser    https://the-internet.herokuapp.com/login    chrome  
+    Maximize Browser Window 
+    Wait Until Element Is Visible   id:username
+    Input Text      id:username     tomsmith 
+    Input Text      id:password     SuperSecretPassword!
+    click element   xpath=//button 
+    Wait Until Element Is Visible   id:flash 
+    Element Should Contain  id:flash    You logged into a secure area!  
+    Click element   xpath=//i[contains(.,' Logout')]
+    Element Should Contain  id:flash    You logged out of the secure area!
+
+
+
+Load_Test_Data_From_Excel
+    LoadTestData    TC0001
+    log    ${dTestData["Address"]}
+    [Teardown]    RecordTCStatus
+
+*** Keywords ***
+
+Open Report    
+    ${options}=    Evaluate    sys.modules['selenium.webdriver'].ChromeOptions()    sys,selenium.webdriver
+    Call Method    ${options}    add_experimental_option    detach    ${True}
+    sleep   15s
+    open browser    C:\Repo\UnifiedRobotFramework\log.html  chrome
+
+
+Pick_Random_No
+    ${TC_NUMBER} GetSmallRandomNo
+    ${TC_NUMBER} Convert to string ${TC_NUMBER}
+    Set Suite Variable ${TC_RANDOMNO} ${TC_NUMBER}
+    Return ${TC_RANDOMNO}
+
+AddTestData
+    [Arguments]    ${sKey}    ${sValue}
+    Set To Dictionary    ${dTestData}    ${sKey}    ${sValue}
+
+LoadTestData
+    [Arguments]    ${sTestCaseNo}
+    ${FetchInputDataFrom}    Convert To Lowercase    ${FetchInputDataFrom}
+    Run Keyword If    '${FetchInputDataFrom}'=='excel'    LoadTestDataExcel    ${sTestCaseNo}
+    Run Keyword If    '${FetchInputDataFrom}'=='mysql'    LoadTestDataMySQL    ${sTestCaseNo}
+
+LoadTestDataExcel
+    [Arguments]    ${sTestCaseNo}
+    Set Suite Variable    ${sFileName}    ${TestDataFileName}
+    Set Suite Variable    ${sSheetName}    ${TestDataSheetName}
+    Set Suite Variable    ${bDataFound}    ${TC_False}
+    log    ${sFileName}
+    Open Excel    ${sFileName}
+    #Get the total rows in the Sheet
+    ${iTotalRows}    ExcelLibrary.Get Row Count    ${sSheetName}
+    : FOR    ${iRowNo}    IN RANGE    1    ${iTotalRows}
+    \    ${TC_Num}    Read Cell Data By Coordinates    ${sSheetName}    0    ${iRowNo}
+    \    log    ${sTestCaseNo}
+    \    Run Keyword If    '${sTestCaseNo}'=='${TC_Num}'    Set Suite Variable    ${bDataFound}    ${TC_True}
+    \    ${sSearchedData}    Run Keyword If    '${sTestCaseNo}'=='${TC_Num}'    Get Row Values    ${sSheetName}    ${iRowNo}
+    \    ${arrTestData}    Run Keyword If    '${sTestCaseNo}'=='${TC_Num}'    Convert To String    ${sSearchedData}
+    \    ${sKey}    Run Keyword If    '${sTestCaseNo}'=='${TC_Num}'    GetSubstringByDelimiter    ${arrTestData}    (
+    \    ...    2
+    \    ${sKey}    Run Keyword If    '${sTestCaseNo}'=='${TC_Num}'    GetSubstringByDelimiter    ${sKey}    '
+    \    ...    3
+    \    ${sValue}    Run Keyword If    '${sTestCaseNo}'=='${TC_Num}'    GetSubstringByDelimiter    ${arrTestData}    (
+    \    ...    3
+    \    ${sValue}    Run Keyword If    '${sTestCaseNo}'=='${TC_Num}'    GetSubstringByDelimiter    ${sValue}    '
+    \    ...    3
+    \    Run Keyword If    '${sTestCaseNo}'=='${TC_Num}'    Set To Dictionary    ${dTestData}    ${sKey}    ${sValue}
+    \    Exit For Loop If    '${sTestCaseNo}'<>'${TC_Num}' and '${bDataFound}'== '${TC_True}'
+    Set Suite Variable    &{dTestData}
+
+LoadTestDataMySQL
+    [Arguments]    ${sTestCaseNo}
+    Connect To Database Using Custom Params    pymysql    database='${MySQLDB}', user='${MySQLUser}', password='${MySQLPassword}', host='${MySQLHost}', port=${MySQLPort}
+    ${sqlQuery}    catenate    SELECT TDesc,TDescVal FROM    ${MySQLTableName}    WHERE TCID=    "${sTestCaseNo}"
+    ${ResultSet}    Query    ${sqlQuery}
+    Log Many    ${ResultSet}
+    ${TC_COUNTER}    Get Length    ${ResultSet}
+    : FOR    ${TC_LOOPCOUNER}    IN RANGE    0    ${TC_COUNTER}
+    \    Set To Dictionary    ${dTestData}    ${ResultSet[${TC_LOOPCOUNER}][0]}    ${ResultSet[${TC_LOOPCOUNER}][1]}
+    Return    ${dTestData}

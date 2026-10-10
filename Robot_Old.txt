@@ -1,0 +1,551 @@
+*** Settings ***
+Suite Setup       CreateLogFiles
+Suite Teardown
+Test Teardown
+Library           SeleniumLibrary
+Library           OperatingSystem
+Library           DatabaseLibrary
+Variables         Layer_Application/OR/CyclosObjects.py
+Library           RPA.Excel.Files
+Library           Collections
+Variables         TestData/lib_Config.py
+Variables         TestData/lib_Constants.py
+Library           Layer_Platform/DateTimeFunctions.py
+Library           Layer_Platform/PlatformFunctions.py
+Library           Layer_Platform/StringFunctions.py
+Library           Layer_Platform/FileFunctions.py
+Library           Layer_Platform/Util_Excel.py
+Library           Layer_Platform/ExcelDrivenExecution.py
+Library           Layer_Platform/NewOTAOperations.py
+Library           XML
+Library           JiraRobot
+Library           Layer_Platform/EMail.py
+Resource          Layer_Application/Common_Functions/CyclosKeywords.txt
+Library           String
+
+*** Variables ***
+&{dTestData}
+${TC_DATA}        ${EMPTY}
+
+*** Test Cases ***
+Excel_Driven_Execution
+    [Setup]    CreateLogFiles
+    ${timestamp}    Create TimeStamp
+    ${strDirName}    Catenate    ${TestResultLogFilePath}\\Execution_${timestamp}
+    Set Suite Variable    ${strDirName}
+    Create Directory    ${strDirName}
+    ${strModules}    FindActiveModules    ${ModuleFileName}
+    ${arrModules}    Split String    ${strModules}    :
+    ${iCounter}    Get length    ${arrModules}
+    ${iCounter}    Evaluate    ${iCounter}-1
+    : FOR    ${iLoopCounter}    IN RANGE    0    ${iCounter}
+    \    ${strModuleDirName}    GetSubstringByDelimiter    ${arrModules[${iLoopCounter}]}    .    0
+    \    Set Suite Variable    ${strLogModule}    ${strModuleDirName}
+    \    ${strModuleDirName}    Catenate    ${strDirName}\\    ${strModuleDirName}
+    \    ${strModuleDirName}    RemoveSpaceInString    ${strModuleDirName}
+    \    Set Suite Variable    ${strModuleDirName}
+    \    ${strModuleFileName}    Catenate    ${TestCaseFilePathName}\\    ${arrModules[${iLoopCounter}]}
+    \    ${strModuleFileName}    RemoveSpaceInString    ${strModuleFileName}
+    \    ${strTestCaseData}    FindActiveTestCases    ${strModuleFileName}
+    \    ExecuteActiveTestCases    ${strTestCaseData}
+    \    AppendInFile    C:\\UnifiedRobotFramework\\Defects\\EDE.txt    Done
+    [Teardown]    AfterExecutionProcessing
+
+Load_Test_Data_From_Excel
+    LoadTestData    TC0001
+    log    ${dTestData["Address"]}
+    [Teardown]    RecordTCStatus
+
+Excel_Utilities
+    Comment    Create a New Excel_XLS    C:\\UnifiedRobotFramework\\TestData\\Excel_Data\\Excel_xls.xls
+    Comment    Append in excel_xls    C:\\UnifiedRobotFramework\\TestData\\Excel_Data\\Excel_xls.xls    TC_Number\tTC_Desc\tStatus\tComments\n
+    ${bFlag}    CreateExcelFileXLSX    C:\\UnifiedRobotFramework\\TestData\\Excel_Data\\Excel_xlsx.xlsx
+    ${bFlag}    AddExcelSheet    C:\\UnifiedRobotFramework\\TestData\\Excel_Data\\Excel_xlsx.xlsx    Pune
+    ${bFlag}    AddExcelSheet    C:\\UnifiedRobotFramework\\TestData\\Excel_Data\\Excel_xlsx.xlsx    Goa
+    ${bFlag}    RenameExcelSheet    C:\\UnifiedRobotFramework\\TestData\\Excel_Data\\Excel_xlsx.xlsx    Goa    Gwalior
+    ${bFlag}    CopyWorksheet    C:\\UnifiedRobotFramework\\TestData\\Excel_Data\\Excel_xlsx.xlsx    Gwalior    Bombay
+    ${bFlag}    VerifyWorkSheetPresent    C:\\UnifiedRobotFramework\\TestData\\Excel_Data\\Excel_xlsx.xlsx    Bombay
+    ${bFlag}    SetCellValue    C:\\UnifiedRobotFramework\\TestData\\Excel_Data\\Excel_xlsx.xlsx    Pune    b5    Mayur
+    ${bFlag}    SetCellValue    C:\\UnifiedRobotFramework\\TestData\\Excel_Data\\Excel_xlsx.xlsx    Pune    A15    Mayur
+    ${bFlag}    SetCellValue    C:\\UnifiedRobotFramework\\TestData\\Excel_Data\\Excel_xlsx.xlsx    Pune    C6    Mayur
+    ${bFlag}    SetCellValue    C:\\UnifiedRobotFramework\\TestData\\Excel_Data\\Excel_xlsx.xlsx    Pune    D8    Mayur
+    ${bFlag}    GetCellValue    C:\\UnifiedRobotFramework\\TestData\\Excel_Data\\Excel_xlsx.xlsx    Pune    b5
+    ${bFlag}    CopyExcelWorkBook    C:\\UnifiedRobotFramework\\TestData\\Excel_Data\\Excel_xlsx.xlsx    C:\\UnifiedRobotFramework\\TestData\\Excel_Data\\Excel_Copy_xlsx.xlsx
+    Comment    ${bFlag}    OpenExcelWorkBook    C:\\UnifiedRobotFramework\\TestData\\Excel_Data\\Excel_xlsx.xlsx
+    ${bFlag}    FindTextInWorksheet    C:\\UnifiedRobotFramework\\TestData\\Excel_Data\\Excel_xlsx.xlsx    Pune    Mayur
+    ${bFlag}    FindAllTextInWorksheet    C:\\UnifiedRobotFramework\\TestData\\Excel_Data\\Excel_xlsx.xlsx    Pune    Mayur
+    ${bFlag}    ReplaceTextInWorksheet    C:\\UnifiedRobotFramework\\TestData\\Excel_Data\\Excel_xlsx.xlsx    Pune    Mayur    Ashlesha
+    ${bFlag}    ReplaceTextInWorksheet    C:\\UnifiedRobotFramework\\TestData\\Excel_Data\\Excel_xlsx.xlsx    Pune    Ashlesha    Mayur
+    should be equal    Pune    y
+    [Teardown]    RecordTCStatus
+
+File_Functions
+    ${FileContent}    Get File    C:\\UnifiedRobotFramework\\Info\\pybot.txt
+    log    ${FileContent}
+    ${bResult}    Append To File    C:\\UnifiedRobotFramework\\Info\\pybot.txt    Sky is blue
+    ${bResult}    Grep file    C:\\UnifiedRobotFramework\\Info\\pybot.txt    Sky is blue
+    Should be equal    Delhi    delhi
+    [Teardown]    RecordTCStatus
+
+Load_Test_Data
+    [Tags]    robot
+    LoadTestData    TC0001
+    [Teardown]    RecordTCStatus
+
+Tested test cases above
+    [Tags]
+
+Write Excel Test
+    [Tags]
+    Comment    @{content}    Create List
+    Comment    Append To List    ${content}    1    1    Test Case 1
+    Comment    Append To List    ${content}    2    1    Test Case 2
+    Comment    Append To List    ${content}    3    1    Test Case 3
+    Comment    Append To List    ${content}    4    1    Test Case 4
+    Comment    Comment    Write To Excel File    test3.xls    ${content}
+    Comment    Get length    ${content}
+    Append To List    ${TCStatus}    ${TEST NAME}
+    Append To List    ${TCStatus}    ${TEST STATUS}
+    Comment    Write To Excel File    test3.xls    ${content}
+    Get length    ${TCStatus}
+    : FOR    ${item}    IN    ${TCStatus}
+    \    Log    ${item}
+
+Attach_ExecutionLog_ALM
+    ${objALM}    Qc Connect    ${ALMPath}    ${ALMUserName}    ${ALMPassword}    ${ALMDomain}    ${ALMProject}
+    Update Result In ALM    ${objALM}    ${ALMTestSetFolderPath}    ${ALMTestSetName}    C:\\UnifiedRobotFramework\\TestResultLogs\\FailedTCLog.txt
+    Qc Disconnect    ${objALM}
+
+Update_TestCase_Result_ALM
+    ${objALM}    Qc Connect    https://alm12.qc.tieto.com/qcbin    gaikxpri    trade11@16    TIETO    Automation_COE
+    UpdateTCStatusInALM    ${objALM}    Root\\Test-RobotFramework-ALM    SampleTestSet    Excel_Utilities    Passed
+    Qc Disconnect    ${objALM}
+
+newtc
+    [Timeout]
+    Log    veena
+    Should be equal    Pune    delhi
+    [Teardown]    RecordTCStatus
+
+SampleTestCase
+    should be equal    Pune    Pune
+    [Teardown]    RecordTCStatus
+
+Jira Operations
+    ${issue_field_dict}    Create Dictionary    project=TACE    summary=Create latest Issue with Robot Framework    description=Creating latest issue using Robot framework    issuetype=Bug
+    ${objJira}    Connect To Jira    gaikxpri    trade11@17    {'server': 'https://jira.saas.etb.tieto.com'}
+    ${issue}    create issue    ${issue_field_dict}
+    Comment    Update Issue In Jira    ${objJira}    TACE-1 description=1. Creating a new issue using Robot framework 2. Updating the Jira using Robot framework.
+
+DB SQL
+    Connect To Database Using Custom Params    pymysql    database='app_testdata', user='root', password='Ashlesha@128', host='127.0.0.1', port=3306
+    ${TC001_CITY}    Query    SELECT TDESC,TDESCVAL FROM TESTDATA WHERE TCID='TC001'
+    Log Many    ${TC001_CITY}
+    ${TC_COUNTER}    Get Length    ${TC001_CITY}
+    : FOR    ${TC_LOOPCOUNER}    IN RANGE    0    ${TC_COUNTER}
+    \    ${TC_LOOPCOUNER_ACTUAL}    Evaluate    ${TC_LOOPCOUNER}+1
+    \    Log    Record ${TC_LOOPCOUNER_ACTUAL}
+    \    Log    ${TC001_CITY[${TC_LOOPCOUNER}][0]}
+    \    Log    ${TC001_CITY[${TC_LOOPCOUNER}][1]}
+    \    Log    ----------------------------------------
+
+TC_ExecuteMySQLQuery
+    Comment    ${ResultSet}    ExecuteMySQLQuery    Create table vktestdata (TCID VARCHAR(50),TDesc VARCHAR(100),TDescVal VARCHAR(100))
+    ${ResultSet}    ExecuteMySQLQuery    Insert into vktestdata (TCID,TDesc,TDescVal) Values('TC001','APPURL','google.com')
+    ${ResultSet}    ExecuteMySQLQuery    Select * from vktestdata
+    Comment    ${ResultSet}    ExecuteMySQLQuery    Select * from googletestdata where TCID = "TC0001"
+    [Teardown]    RecordTCStatus
+
+Send_Mail
+    Send_Email    veena.katiyar@tieto.com;veena.katiyar@gmail.com    Test Mail    Hello, This is test mail.    C:\\UnifiedRobotFramework\\TestResultLogs\\Execution_09_Thu11_2017_11_50\\B_TC_Controller\\B_TC_Controller_Log_09_Thu11_2017_11_50.html
+
+Parallel_Execution
+    Comment    Suite1 Suite2 Suite3
+    log    ${EXECDIR}
+    ExecuteTestcasesInParallel    Suite1.txt;Suite2.txt
+
+Test
+    Log    Veena
+    AppendInFile    C:\\UnifiedRobotFramework\\Defects\\Defects_14112017100602.txt    veena
+    AppendInFile    C:\\UnifiedRobotFramework\\Defects\\Defects_14112017100602.txt    aashu
+
+Accounts_Flow
+    Comment    Manage Account
+    LoadTestData    GlobalData
+    LoadTestData    TC0006
+    LoginIntoCyclosApplication    ${dTestData["APPURL"]}    ${dTestData["USERNAME"]}    ${dTestData["PASSWORD"]}
+    CreateNewCurrency    ${dTestData["CurrName"]}    ${dTestData["CurrSymbol"]}    ${dTestData["CurrPattern"]}    ${dTestData["CurrDesc"]}
+    UpdateCurrency    ${dTestData["CurrName"]}    ${dTestData["NewCurrName"]}    ${dTestData["CurrSymbol"]}    ${dTestData["CurrPattern"]}    ${dTestData["newCurrDesc"]}
+    Comment    Create Account
+    CreateNewAccount    ${dTestData["AccType"]}    ${dTestData["AccName"]}    ${dTestData["AccDesc"]}    ${dTestData["AccCurrency"]}
+    Comment    Update Account
+    UpdateAccount    ${dTestData["AccName"]}    ${dTestData["newAccName"]}    ${dTestData["newaccDesc"]}
+    Comment    System Accounts
+    SearchSystemAccount    ${dTestData["systemAccountName"]}
+    Comment    System Payment
+    SystemPayment
+    SearchSystemAccount    ${dTestData["systemAccountName"]}
+    Comment    Member Payment
+    MemberPayment
+    LogoutFromCyclos
+
+Bookkeeping_Flow
+    Comment    Manage Account
+    LoadTestData    GlobalData
+    LoadTestData    TC0007
+    log    ${dTestData["ExternalPaymentAmount"]}
+    LoginIntoCyclosApplication    ${dTestData["APPURL"]}    ${dTestData["USERNAME"]}    ${dTestData["PASSWORD"]}
+    Comment    Create Currency
+    CreateNewCurrency    ${dTestData["CurrName"]}    ${dTestData["CurrSymbol"]}    ${dTestData["CurrPattern"]}    ${dTestData["CurrDesc"]}
+    Comment    Create Account
+    CreateNewAccount    ${dTestData["AccType"]}    ${dTestData["AccName"]}    ${dTestData["AccDesc"]}    ${dTestData["AccCurrency"]}
+    Set Suite Variable    ${dTestData["newmemberAccountType"]}    ${dTestData["memberAccountType"]}
+    Comment    Create External Account
+    CreateExternalAccounts
+    Comment    Update External Account
+    SearchExternalAccount    ${dTestData["extrnlAccName"]}
+    UpdateExternalAccounts
+    Comment    Insert Payment Type
+    SearchExternalAccount    ${dTestData["extrnlAccName"]}
+    InsertPaymentType
+    SearchExternalAccount    ${dTestData["extrnlAccName"]}
+    SearchPaymentType    ${dTestData["ExternalPaymentTypeName"]}
+    UpdatePaymentType
+    Comment    External accounts
+    SearchExternalAccountsOverview    ${dTestData["extrnlAccName"]}
+    ExternalAccountPayment
+    LogoutFromCyclos
+
+AccessDevices_Flow
+    Comment    Manage Account
+    LoadTestData    GlobalData
+    LoadTestData    TC0008
+    LoginIntoCyclosApplication    ${dTestData["APPURL"]}    ${dTestData["USERNAME"]}    ${dTestData["PASSWORD"]}
+    AddCardType
+    SearchCardType    ${dTestData["cardTypeName"]}
+    UpdateCardType
+    SearchCardType    ${dTestData["cardTypeName"]}
+    DeleteCardType
+    LogoutFromCyclos
+
+Priti_Cyclos
+
+UserCreation_FullMember
+    LoadTestData    GlobalData
+    LoadTestData    TC0001
+    Comment    LogintoCyclos    ${dTestData["TC_AppURL"]}    ${dTestData["TC_UserName"]}    ${dTestData["TC_Password"]}
+    LoginIntoCyclosApplication    ${dTestData["APPURL"]}    ${dTestData["USERNAME"]}    ${dTestData["PASSWORD"]}
+    UserCreation    ${dTestData["TypeofUser"]}    ${dTestData["FullName"]}    ${dTestData["LoginName"]}    ${dTestData["Email"]}    ${dTestData["Birthdate"]}    ${dTestData["Gender"]}
+    ...    ${dTestData["Address"]}    ${dTestData["PostalCode"]}    ${dTestData["City"]}    ${dTestData["MobilePhone"]}
+    LogoutFromCyclos
+
+UserCreation_FullBroker
+    LoadTestData    GlobalData
+    LoadTestData    TC0002
+    LoginIntoCyclosApplication    ${dTestData["APPURL"]}    ${dTestData["TC_UserName"]}    ${dTestData["TC_Password"]}
+    UserCreation    ${dTestData["TypeofUser"]}    ${dTestData["FullName"]}    ${dTestData["LoginName"]}    ${dTestData["Email"]}    ${dTestData["Birthdate"]}    ${dTestData["Gender"]}
+    ...    ${dTestData["Address"]}    ${dTestData["PostalCode"]}    ${dTestData["City"]}    ${dTestData["MobilePhone"]}
+    LogoutFromCyclos
+
+CreateAdministrator
+    LoadTestData    GlobalData
+    LoadTestData    TC0003
+    LoginIntoCyclosApplication    ${dTestData["APPURL"]}    ${dTestData["TC_UserName"]}    ${dTestData["TC_Password"]}
+    CreateAdministrator    ${dTestData["TypeofAdminAccount"]}    ${dTestData["AccountAdminFullName"]}    ${dTestData["AccountAdminLoginName"]}    ${dTestData["AccountAdminEmail"]}    ${dTestData["AccountAdminPassword"]}
+    Sleep    2
+    CreateAdministrator    ${dTestData["TypeofAdminSystem"]}    ${dTestData["SystemAdminFullName"]}    ${dTestData["SystemAdminLoginName"]}    ${dTestData["SystemAdminEmail"]}    ${dTestData["SystemAdminPassword"]}
+    LogoutFromCyclos
+
+PermissionGroups
+    LoadTestData    GlobalData
+    LoadTestData    TC0004
+    LoginIntoCyclosApplication    ${dTestData["APPURL"]}    ${dTestData["TC_UserName"]}    ${dTestData["TC_Password"]}
+    CreateNewPermissionGroup    ${dTestData["TypeofGroup"]}    ${dTestData["Name"]}    ${dTestData["AppURL"]}    ${dTestData["Description"]}
+    EditMemberGroupSettings    ${dTestData["AppURLModify"]}    ${dTestData["DescriptionModify"]}    ${dTestData["MaxProfileImages"]}    ${dTestData["PasswordPolicy"]}    ${dTestData["AdPublication"]}
+    EditPermissionGroup
+    LogoutFromCyclos
+
+*** Keywords ***
+Add a New Sheet
+    [Arguments]    ${sFilePath}    ${NewSheetName}
+    Open Excel    ${sFilePath}
+    Add New Sheet    ${NewSheetName}
+    Save Excel    ${sFilePath}
+
+AddTestData
+    [Arguments]    ${sKey}    ${sValue}
+    Set To Dictionary    ${dTestData}    ${sKey}    ${sValue}
+
+LoadTestData
+    [Arguments]    ${sTestCaseNo}
+    ${FetchInputDataFrom}    Convert To Lowercase    ${FetchInputDataFrom}
+    Run Keyword If    '${FetchInputDataFrom}'=='excel'    LoadTestDataExcel    ${sTestCaseNo}
+    Run Keyword If    '${FetchInputDataFrom}'=='mysql'    LoadTestDataMySQL    ${sTestCaseNo}
+
+LoadTestDataExcel
+    [Arguments]    ${sTestCaseNo}
+    Set Suite Variable    ${sFileName}    ${TestDataFileName}
+    Set Suite Variable    ${sSheetName}    ${TestDataSheetName}
+    Set Suite Variable    ${bDataFound}    ${TC_False}
+    log    ${sFileName}
+    Open Excel    ${sFileName}
+    #Get the total rows in the Sheet
+    ${iTotalRows}    ExcelLibrary.Get Row Count    ${sSheetName}
+    : FOR    ${iRowNo}    IN RANGE    1    ${iTotalRows}
+    \    ${TC_Num}    Read Cell Data By Coordinates    ${sSheetName}    0    ${iRowNo}
+    \    log    ${sTestCaseNo}
+    \    Run Keyword If    '${sTestCaseNo}'=='${TC_Num}'    Set Suite Variable    ${bDataFound}    ${TC_True}
+    \    ${sSearchedData}    Run Keyword If    '${sTestCaseNo}'=='${TC_Num}'    Get Row Values    ${sSheetName}    ${iRowNo}
+    \    ${arrTestData}    Run Keyword If    '${sTestCaseNo}'=='${TC_Num}'    Convert To String    ${sSearchedData}
+    \    ${sKey}    Run Keyword If    '${sTestCaseNo}'=='${TC_Num}'    GetSubstringByDelimiter    ${arrTestData}    (
+    \    ...    2
+    \    ${sKey}    Run Keyword If    '${sTestCaseNo}'=='${TC_Num}'    GetSubstringByDelimiter    ${sKey}    '
+    \    ...    3
+    \    ${sValue}    Run Keyword If    '${sTestCaseNo}'=='${TC_Num}'    GetSubstringByDelimiter    ${arrTestData}    (
+    \    ...    3
+    \    ${sValue}    Run Keyword If    '${sTestCaseNo}'=='${TC_Num}'    GetSubstringByDelimiter    ${sValue}    '
+    \    ...    3
+    \    Run Keyword If    '${sTestCaseNo}'=='${TC_Num}'    Set To Dictionary    ${dTestData}    ${sKey}    ${sValue}
+    \    Exit For Loop If    '${sTestCaseNo}'<>'${TC_Num}' and '${bDataFound}'== '${TC_True}'
+    Set Suite Variable    &{dTestData}
+
+LoadTestDataMySQL
+    [Arguments]    ${sTestCaseNo}
+    Connect To Database Using Custom Params    pymysql    database='${MySQLDB}', user='${MySQLUser}', password='${MySQLPassword}', host='${MySQLHost}', port=${MySQLPort}
+    ${sqlQuery}    catenate    SELECT TDesc,TDescVal FROM    ${MySQLTableName}    WHERE TCID=    "${sTestCaseNo}"
+    ${ResultSet}    Query    ${sqlQuery}
+    Log Many    ${ResultSet}
+    ${TC_COUNTER}    Get Length    ${ResultSet}
+    : FOR    ${TC_LOOPCOUNER}    IN RANGE    0    ${TC_COUNTER}
+    \    Set To Dictionary    ${dTestData}    ${ResultSet[${TC_LOOPCOUNER}][0]}    ${ResultSet[${TC_LOOPCOUNER}][1]}
+    Return    ${dTestData}
+
+ExecuteMySQLQuery
+    [Arguments]    ${sqlQuery}
+    Connect To Database Using Custom Params    pymysql    database='${MySQLDB}', user='${MySQLUser}', password='${MySQLPassword}', host='${MySQLHost}', port=${MySQLPort}
+    Comment    ${sqlQuery}    catenate    SELECT TDesc,TDescVal FROM    ${MySQLTableName}    WHERE TCID=    "${sTestCaseNo}"
+    ${sqlQuery}    catenate    ${sqlQuery}    ;
+    ${ResultSet}    Execute Sql String    ${sqlQuery}
+    Log Many    ${ResultSet}
+    ${TC_COUNTER}    Get Length    ${ResultSet}
+    Return    ${TC_COUNTER}
+
+ReadTestData
+    [Arguments]    ${sKey}
+    ${sValue}    Get From Dictionary    ${dTestData}    ${sKey}
+    Return    ${sValue}
+
+Create TimeStamp
+    [Documentation]    Creating the Name of the Results file based on the current TimeStamp
+    ${date}    OperatingSystem.Run    echo %date%
+    ${MM}    ${DD}    ${yyyy}    Split String    ${date}    /
+    ${time}    OperatingSystem.Run    echo %time%
+    ${hh}    ${min}    ${sec}    Split String    ${time}    :
+    #Creating TimeStamp
+    ${timestamp}    Set Variable    ${dd}_${mm}_${yyyy}_${hh}_${min}
+    ${timestamp}    Replace String    ${timestamp}    ${TC_Space}    ${TC_BLANK}
+    log    ${timestamp}
+    Return    ${timestamp}
+
+Create Result File
+    [Arguments]    ${sResultFileName}    ${sColumnHeader}
+    [Documentation]    Create a result file at runtime
+    Comment    Format of header ->    TC_Number\tTC_Desc\tStatus\tComments\n
+    ${timestamp}    Create TimeStamp
+    ${sResultFile}    Catenate    ${sResultFileName}_    ${timestamp}    .xls
+    ${sResultFile}    Replace String    ${sResultFile}    ${TC_Space}    ${TC_BLANK}
+    Create File    ${sResultFile}
+    Comment    RenameExcelSheet    ${sResultFile}    Sheet1    ${timestamp}
+    Append to file    ${sResultFile}    ${sColumnHeader}
+    Set Global Variable    ${sResultFileName}    ${sResultFile}
+    Log    ${sResultFileName}
+    Log    ${sColumnHeader}
+    Return    ${sResultFileName}
+
+Create a New Excel_XLS
+    [Arguments]    ${Excel_File_Path}
+    ${bFlag}    Verify File Exist    ${Excel_File_Path}
+    Run Keyword If    '${bFlag}'=='False'    Create Excel Workbook    NewExcelSheet
+    Run Keyword If    '${bFlag}'=='False'    Save Excel    ${Excel_File_Path}
+    ${bFlag}    Verify File Exist    ${Excel_File_Path}
+
+Append in excel_xls
+    [Arguments]    ${sFilePath}    ${sData}
+    ${bFlag}    Verify File Exist    ${sFilePath}
+    Run Keyword If    '${bFlag}'=='False'    Create file    ${sFilePath}
+    Append to file    ${sFilePath}    ${sData}
+
+ExecuteActiveTestCases
+    [Arguments]    ${strTestData}
+    log    ${strModuleDirName}
+    Empty Directory    ${TestResultTempFilePath}
+    ${Result}    Run    ${TestExecutionBatchFile} ${strTestData}
+    Move Files    ${TestResultTempFilePath}\\*.*    ${strModuleDirName}
+    RenameLogFile    ${strModuleDirName}
+    Run Keyword if    '${ALMAttachLogFile}'=='Yes'    AttachExecutionLogInALM
+    Run Keyword if    '${SendLogInEmail}'=='Yes'    SendResultEmail
+
+RecordTestCaseStatus
+    [Arguments]    ${strStatus}    ${strTCName}
+    ${iPOS}    IsSubstring    ${strStatus}    ${TestStatusFail}
+    Run Keyword If    '${iPOS}'=='-1'    RecordPassedTestCase    ${strTCName}
+    Run Keyword If    '${iPOS}'<>'-1'    RecordFailedTestCase    ${strTCName}
+    Log    ${strPassedTcs}
+    Log    ${strFailedTcs}
+
+RecordPassedTestCase
+    [Arguments]    ${strTCName}
+    ${strPassedTcs}    Catenate    ${strPassedTcs}    ${strTCName}    :
+    Set Suite Variable    ${strPassedTcs}
+
+RecordFailedTestCase
+    [Arguments]    ${strTCName}
+    ${strFailedTcs}    Catenate    ${strFailedTcs}    ${strTCName}    :
+    Set Suite Variable    ${strFailedTcs}
+
+LoadModuleTestData
+    [Arguments]    ${sFileName}    ${sSheetName}    ${sTestCaseNo}
+    Set Suite Variable    ${bDataFound}    ${TC_False}
+    log    ${sFileName}
+    Open Excel    ${sFileName}
+    #Get the total rows in the Sheet
+    ${iTotalRows}    ExcelLibrary.Get Row Count    ${sSheetName}
+    : FOR    ${iRowNo}    IN RANGE    1    ${iTotalRows}
+    \    ${sSearchedData}    Get Row Values    ${sSheetName}    ${iRowNo}
+    \    Set Suite Variable    ${arrTestData}    ${sSearchedData}
+    \    ${arrTestData}    Convert To String    ${arrTestData}
+    \    ${sKey}    GetSubstringByDelimiter    ${arrTestData}    (    2
+    \    ${sKey}    GetSubstringByDelimiter    ${sKey}    '    3
+    \    ${sValue}    GetSubstringByDelimiter    ${arrTestData}    (    3
+    \    ${sValue}    GetSubstringByDelimiter    ${sValue}    '    3
+    \    Set To Dictionary    ${dTestData}    ${sKey}    ${sValue}
+    Set Suite Variable    &{dTestData}
+
+AttachExecutionLogInALM
+    Comment    ${iCount}    Get Count    ${strAttachLogs}    ;
+    Comment    ${arrLogs}    Split String    ${strAttachLogs}    ;
+    ${objALM}    Qc Connect    ${ALMPath}    ${ALMUserName}    ${ALMPassword}    ${ALMDomain}    ${ALMProject}
+    Comment    :FOR    ${iLoopCounter}    IN RANGE    0    ${iCount}
+    Comment    \    log    ${arrLogs[${iLoopCounter}]}
+    Comment    \    Set Suite Variable    ${strAttachLogs}    ${arrLogs[${iLoopCounter}]}
+    Update Result In ALM    ${objALM}    ${ALMTestSetFolderPath}    ${ALMTestSetName}    ${strLogFileName}
+    Sleep    20s
+    Qc Disconnect    ${objALM}
+
+UpdateTestCaseStatusInALM
+    ${strPassed}    Get File    ${PassedTCLog}
+    @{arrPassed}    Split String    ${strPassed}    ::
+    ${strFailed}    Get File    ${FailedTCLog}
+    @{arrFailed}    Split String    ${strFailed}    ::
+    ${objALM}    Qc Connect    ${ALMPath}    ${ALMUserName}    ${ALMPassword}    ${ALMDomain}    ${ALMProject}
+    ${iLength}    Get Length    ${arrPassed}
+    Comment    Log passed test cases
+    : FOR    ${iLoopCounter}    IN RANGE    0    ${iLength}-1
+    \    ${TCName}    Remove Space In String    ${arrPassed[${iLoopCounter}]}
+    \    Log    ${TCName}
+    \    UpdateTCStatusInALM    ${objALM}    ${ALMTestSetFolderPath}    ${ALMTestSetName}    ${TCName}    Passed
+    Comment    Log failed testcases
+    ${iLength}    Get Length    ${arrFailed}
+    : FOR    ${iLoopCounter}    IN RANGE    0    ${iLength}-1
+    \    ${TCName}    Remove Space In String    ${arrFailed[${iLoopCounter}]}
+    \    Log    ${TCName}
+    \    UpdateTCStatusInALM    ${objALM}    ${ALMTestSetFolderPath}    ${ALMTestSetName}    ${TCName}    Failed
+    Qc Disconnect    ${objALM}
+
+old_UpdateTCStatusALM
+    Run Keyword if    '${ALMUpdateTestCaseStatus}'=='Yes'    UpdateTestCaseStatusInALM
+
+CreateLogFiles
+    Create file    ${PassedTCLog}
+    Create file    ${FailedTCLog}
+
+RecordTCStatus
+    ${bFlag}    VerifyFileExist    ${PassedTCLog}
+    Run Keyword If    '${bFlag}'=='${TC_False}'    Create File    ${PassedTCLog}
+    ${bFlag}    VerifyFileExist    ${FailedTCLog}
+    Run Keyword If    '${bFlag}'=='${TC_False}'    Create File    ${FailedTCLog}
+    Log    ${TEST STATUS}
+    ${iPOS}    IsSubstring    ${TEST STATUS}    ${TestPassed}
+    ${strTCName}    Catenate    ${TEST NAME}    ::
+    Run Keyword If    '${iPOS}'=='-1'    Append To File    ${FailedTCLog}    ${strTCName}
+    Run Keyword If    '${iPOS}'<>'-1'    Append To File    ${PassedTCLog}    ${strTCName}
+
+ConnectToMySQLDB
+    Comment    Connect To Database Using Custom Params    pymysql    database='app_testdata', user='root', password='Ashlesha@128', host='127.0.0.1', port=3306
+    Connect To Database Using Custom Params    pymysql    database='${MySQLDB}', user='${MySQLUser}', password='${MySQLPassword}', host='${MySQLHost}', port=${MySQLPort}
+
+SendResultEmail
+    ${bFlag}    Post_email    ${EmailRegressionResultTO}    ${EmailRegressionResultCC}    ${EmailSubject}    ${EmailBody}    ${strLogFileName}
+
+RenameLogFile
+    [Arguments]    ${strModuleDirName}
+    ${timestamp}    Create TimeStamp
+    ${strFileName}    Catenate    ${strModuleDirName}\\    ${strLogModule}_Log_${timestamp}.html
+    ${strFileName}    Remove Space In String    ${strFileName}
+    Move File    ${strModuleDirName}\\log*.html    ${strFileName}
+    Set Suite variable    ${strLogFileName}    ${strFileName}
+    ${strAttachLogs}    Catenate    ${strLogFileName}    ;    ${strAttachLogs}
+    Set Suite variable    ${strAttachLogs}
+    Log    ${strAttachLogs}
+
+CreateDefectInJira
+    ${strFailed}    Get File    ${FailedTCLog}
+    @{arrFailed}    Split String    ${strFailed}    ::
+    ${iLength}    Get Length    ${arrFailed}
+    Run Keyword If    '${iLength}'> '1'    LogDefectsInJira    @{arrFailed}
+
+LogDefectsInJira
+    [Arguments]    @{arrFailed}
+    ${timestamp}    GetTimeStamp
+    ${timestamp}    Replace String    ${timestamp}    :    ${TC_BLANK}
+    ${timestamp}    Replace String    ${timestamp}    -    _
+    ${iLength}    Get Length    ${arrFailed}
+    ${JiraIssuesLog}    Catenate    ${DefectsDirPath}\\    Defects_${timestamp}.txt
+    ${JiraIssuesLog}    Remove Space In String    ${JiraIssuesLog}
+    Create File    ${JiraIssuesLog}
+    Set Suite Variable    ${JiraIssuesLog}
+    ${timestamp}    GetTimeStampLong
+    ${objJira}    Connect To Jira    ${JiraUserName}    ${JiraPwd}    ${JiraURL}
+    : FOR    ${iLoopCounter}    IN RANGE    0    ${iLength}-1
+    \    ${TCName}    Remove Space In String    ${arrFailed[${iLoopCounter}]}
+    \    ${strJiraIssue}    Catenate    ${TCName}    _${timestamp}    _Failed
+    \    ${strJiraIssue}    Remove Space In String    ${strJiraIssue}
+    \    ${issue_field_dict}    Create Dictionary    project=${JiraProject}    summary=${strJiraIssue}    description=${strJiraIssue}    issuetype=Bug
+    \    ${issue}    create issue    ${issue_field_dict}
+    \    ${issue}    Catenate    ${issue}_    ${strJiraIssue}
+    \    ${issue}    Remove Space In String    ${issue}
+    \    AppendInFile    ${JiraIssuesLog}    ${issue}
+    AppendInFile    ${JiraIssuesLog}    Please find logs here :-
+    AppendInFile    ${JiraIssuesLog}    ${strAttachLogs}
+
+ExecuteTestcasesInParallel
+    [Arguments]    ${strTCData}
+    ${timestamp}    Create TimeStamp
+    ${strDirName}    Catenate    ${TestResultLogFilePath}\\Execution_${timestamp}
+    Set Suite Variable    ${strDirName}
+    Create Directory    ${strDirName}
+    Log    ${strTCData}
+    ${iCount}    Get Count    ${strTCData}    ;
+    ${iCount}    Evaluate    ${iCount}+1
+    ${strTCData}    Replace String    ${strTCData}    ;    ${TC_Space}
+    ${strExec}    Catenate    ${iCount}    --outputdir    ${strDirName}    ${strTCData}
+    log    ${strExec}
+    ${Result}    Run    ${ParallelExecutionBatchFile} "${strExec}" > c:\\shared\\vk.txt
+
+Send_Email
+    [Arguments]    ${EmailRegressionResultTO}    ${EmailSubject}    ${EmailBody}    ${strLogFileName}
+    Comment    List of email addresses in "To" field separated by ;    Text in "Subject" textbox    Text in Email body    Path to attachment
+    ${bFlag}    Post_email    ${EmailRegressionResultTO}    ${EmailRegressionResultCC}    ${EmailSubject}    ${EmailBody}    None
+    Log    ${bFlag}
+
+AfterExecutionProcessing
+    Run Keyword if    '${CreateDefectInJira}'=='Yes'    CreateDefectInJira
+    Run Keyword if    '${ALMUpdateTestCaseStatus}'=='Yes'    UpdateTestCaseStatusInALM
+
+CYCLOS_KEYWORD
+
+Pick_Random_No
+    ${TC_NUMBER}    GetSmallRandomNo
+    ${TC_NUMBER}    Convert to string    ${TC_NUMBER}
+    Set Suite Variable    ${TC_RANDOMNO}    ${TC_NUMBER}
+    Return    ${TC_RANDOMNO}

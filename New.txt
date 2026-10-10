@@ -1,0 +1,2 @@
+Log defects in ALM by automation
+Send mail from server where SMTP is not configured
