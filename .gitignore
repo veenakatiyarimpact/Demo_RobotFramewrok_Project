@@ -1,0 +1,13 @@
+
+# Browser Drivers
+Drivers/
+
+# Pabot logs and results
+pabot_manager.log
+pabot_results/
+
+# Robot Framework results
+results/
+log.html
+output.xml
+report.html
