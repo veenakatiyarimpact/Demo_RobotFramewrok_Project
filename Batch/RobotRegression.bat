@@ -1,4 +1,4 @@
 
-cd C:\Repo\UnifiedRobotFramework\Batch
+cd C:\Repo\Demo_RobotFramewrok_Project\Batch
 
-start pybot -t Excel_Driven_Execution --outputdir C:\Repo\UnifiedRobotFramework\TestResultLogs\Temp1 --report none C:\Repo\UnifiedRobotFramework\Robot.txt 
+start robot -t Excel_Driven_Execution --outputdir C:\Repo\Demo_RobotFramewrok_Project\TestResultLogs\Temp1 --report none C:\Repo\Demo_RobotFramewrok_Project\Robot.txt 
