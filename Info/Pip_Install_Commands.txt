@@ -15,3 +15,12 @@ pip install -U robotframework-pabot
 
 ## for SVN integration
 pip install robotframework-ride-tortoisesvn
+
+# Jira
+pip install jira
+python -m pip install --upgrade setuptools
+pip install	 robotframework-jira
+
+pip install robotframework-selenium2library
+pip install robotframework-databaselibrary
+pip install mysql-connector-python

@@ -1,5 +1,6 @@
 *** Settings ***
 Library    SeleniumLibrary
+Library    JIRALibrary
 
 Suite Setup    Log    Inside test suite setup
 Suite Teardown    log    Inside test suite teardown
@@ -76,3 +77,9 @@ OrangeHRM Login2
     Click Element    xpath://img[@alt="profile picture"]
     Click Element    link=Logout
     Close Browser
+
+Jira Operations
+    ${issue_field_dict}    Create Dictionary    project=TACE    summary=Create latest Issue with Robot Framework    description=Creating latest issue using Robot framework    issuetype=Bug
+    ${objJira}    Connect To Jira    gaikxpri    trade11@17    {'server': 'https://jira.saas.etb.tieto.com'}
+    ${issue}    create issue    ${issue_field_dict}
+    Comment    Update Issue In Jira    ${objJira}    TACE-1 description=1. Creating a new issue using Robot framework 2. Updating the Jira using Robot framework.

@@ -1,5 +1,17 @@
 *** Settings ***
-Library           SeleniumLibrary
+Variables    ../Layer_Application/OR/Demo_OR.py
+Library     SeleniumLibrary
+
+*** Keywords ***
+Launch Browser
+    Open Browser    https://www.google.com   chrome
+    sleep    5s
+    Maximize Browser Window
+    Input Text    ${Obj_Txt_Search}    Google
+    Click Button    ${Obj_Btn_Search}
+    ${TC_SEARCHTIME}    Get Text    ${Obj_Txt_SearchResult}
+    Log    ${TC_SEARCHTIME}
+    Close Browser
 
 *** Test Cases ***
 TC_Google_App1
@@ -13,14 +25,3 @@ TC_Google_App3
 
 TC_Google_App4
     Launch Browser
-
-*** Keywords ***
-Launch Browser
-    Open Browser    https://www.google.co.in/?gws_rd=ssl
-    sleep    5s
-    Maximize Browser Window
-    Input Text    xpath=.//input[@name='q']    Google
-    Click Button    xpath=.//input[contains(@value,'Google Search')]
-    ${TC_SEARCHTIME}    Get Text    xpath=.//*[@id='resultStats']
-    Log    ${TC_SEARCHTIME}
-    Close Browser
