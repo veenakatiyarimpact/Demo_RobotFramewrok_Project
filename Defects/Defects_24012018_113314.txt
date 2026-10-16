@@ -1,4 +1,0 @@
-TACE-172_Excel_Utilities_24.01.2018_11:33:14_Failed
-TACE-173_newtc_24.01.2018_11:33:14_Failed
-Please find logs here :-
-C:\UnifiedRobotFramework\TestResultLogs\Execution_24_Wed01_2018_11_32\A_TC_Controller\A_TC_Controller_Log_24_Wed01_2018_11_32.html ; 
