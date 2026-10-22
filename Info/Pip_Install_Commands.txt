@@ -24,3 +24,15 @@ pip install	 robotframework-jira
 pip install robotframework-selenium2library
 pip install robotframework-databaselibrary
 pip install mysql-connector-python
+
+# API Testing
+pip install robotframework-requests
+pip install robotframework-jsonlibrary
+
+# Playwright Browser
+1. pip install robotframework-browser
+2. rfbrowser init
+
+# DB Testing
+pip install pymysql
+Robotframework-databaselibrary

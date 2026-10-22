@@ -1,4 +1,4 @@
-'''@author: Priti Gaikwad'''
+'''@author: Veena Katiyar'''
 import pywintypes
 import win32com
 import win32com.client as w32c

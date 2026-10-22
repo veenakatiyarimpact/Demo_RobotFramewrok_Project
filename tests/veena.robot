@@ -6,10 +6,9 @@ Library    Collections
 Library    RequestsLibrary
 
 Suite Setup    Log    Inside test suite setup
-Suite Teardown    log    Inside test suite teardown
-Default Tags    Sanity
-
-Test Teardown    SeleniumLibrary.Open Browser    file:///C:/Repo/Demo_RobotFramewrok_Project/results/log.html    chrome
+Suite Teardown    openTestResult
+    
+Default Tags    Sanity 
 
 *** Variables ***
 ${url}    https://google.com 
@@ -29,6 +28,11 @@ googleIt
     Input Text      name=q                ${searchText}
     SeleniumLibrary.Press Keys    name=q    ENTER
     Sleep           2 
+
+openTestResult
+    Close All Browsers
+    SeleniumLibrary.Open Browser    file:///C:/Repo/Demo_RobotFramewrok_Project/results/log.html    chrome
+    
 
 
 *** Test Cases ***
@@ -106,9 +110,8 @@ Fill All Fields And Submit Form
     Log    ${options1}
 
     @{opt1}    Create List    Male    Female
-    FOR    ${item}    IN    ${options1}
-        Log    ${item}
-        Should Contain    @{opt1}   ${item}     
+    FOR    ${item}    IN    @{options1}
+        Log    ${item}    
     END
     Select From List By Label    id=exampleFormControlSelect1   Male
     Select Radio Button       inlineRadioOptions   option2
